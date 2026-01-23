@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <!-- Tailwind -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- TensorFlow.js -->
+  <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.12.0/dist/tf.min.js"></script>
+
+  <!-- Papa Parse -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.3.2/papaparse.min.js"></script>
+
+  <!-- Leaflet Map -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+  <!-- Custom styles -->
+  <link rel="stylesheet" href="styles.css" />
+
+  <!-- Page title -->
+  <title>Weather Intelligence System</title>
+
+
+</head>
+
+<body class="min-h-screen text-slate-100
+  bg-[radial-gradient(ellipse_at_top,_rgba(56,189,248,0.12),_transparent_60%)]
+  bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800">
+
+  <div class="flex min-h-screen">
+
+    <!-- Mobile Overlay -->
+    <div
+      id="sidebarOverlay"
+      class="fixed inset-0 bg-black/50
+             z-40 hidden md:hidden"
+    ></div>
+
+    <!-- Icon Sidebar -->
+    <aside
+      id="sidebar"
+      class="fixed top-0 left-0 z-50 h-screen
+            w-52
+            md:w-16 md:hover:w-52
+            -translate-x-full md:translate-x-0
+            bg-slate-900/80 backdrop-blur
+            border-r border-white/10
+            flex flex-col
+            pt-16 md:pt-6
+            transition-transform duration-300 ease-in-out
+            overflow-hidden"
+    >
+
+      <!-- Overview -->
+      <a href="#overview" class="group flex items-center gap-3 px-4 py-2 text-slate-300 hover:bg-slate-800/70 rounded-lg transition relative">
+        <span class="text-xl">🏠</span>
+        <span class="
+          opacity-100
+          md:opacity-0
+          md:group-hover:opacity-100
+          md:translate-x-2
+          md:group-hover:translate-x-0
+          transition-all
+          duration-200
+        ">
+          Home
+        </span>
+      </a>
+
+      <!-- Insights -->
+      <a href="#insights" class="group flex items-center gap-3 px-4 py-2 text-slate-300 hover:bg-slate-800/70 rounded-lg transition relative">
+        <span class="text-xl">📊</span>
+        <span class="
+          opacity-100
+          md:opacity-0
+          md:group-hover:opacity-100
+          md:translate-x-2
+          md:group-hover:translate-x-0
+          transition-all
+          duration-200
+        ">
+          Insights
+        </span>
+      </a>
+
+      <!-- About -->
+      <a href="#about" class="group flex items-center gap-3 px-4 py-2 text-slate-300 hover:bg-slate-800/70 rounded-lg transition relative">
+        <span class="text-xl">ℹ️</span>
+        <span class="
+          opacity-100
+          md:opacity-0
+          md:group-hover:opacity-100
+          md:translate-x-2
+          md:group-hover:translate-x-0
+          transition-all
+          duration-200
+        ">
+          About
+        </span>
+      </a>
+    
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 ml-0 md:ml-16 transition-all duration-300">
+      <div class="max-w-6xl mx-auto px-6 py-10 space-y-20">
+
+        <!-- Header -->
+        <header class="text-center relative">
+          <!-- Mobile Menu Button -->
+          <button
+            id="mobileMenuBtn"
+            class="md:hidden fixed top-4 left-4 z-50
+                  bg-slate-900/80 backdrop-blur
+                  border border-white/10
+                  rounded-lg p-2 text-xl"
+            aria-label="Open navigation menu"
+          >
+            ☰
+          </button>
+
+          <!-- Animated background glow -->
+          <div class="absolute inset-0 -z-10">
+            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-sky-500/10 rounded-full blur-3xl animate-pulse"></div>
+          </div>
+
+          <!-- Icon and Title Container -->
+          <div class="inline-flex items-center justify-center gap-3 mb-4">
+            <span class="text-5xl animate-bounce-slow">🌦️</span>
+            <h1 class="text-4xl md:text-5xl font-extrabold bg-gradient-to-r from-sky-400 via-blue-400 to-cyan-400 bg-clip-text text-transparent">
+              Weather Intelligence
+            </h1>
+          </div>
+          
+          <p class="text-slate-300 text-base md:text-lg font-medium mb-2">
+            AI-Powered Rain Prediction System
+          </p>
+          
+          <p class="text-slate-500 text-sm max-w-2xl mx-auto">
+            Leveraging machine learning and real-time meteorological data to forecast the probability of rainfall, providing actionable insights for everyday decisions.
+          </p>
+
+          <!-- Decorative divider -->
+          <div class="flex items-center justify-center gap-2 mt-6">
+            <div class="h-px w-16 bg-gradient-to-r from-transparent to-sky-400/50"></div>
+            <span class="text-sky-400/60">⚡</span>
+            <div class="h-px w-16 bg-gradient-to-l from-transparent to-sky-400/50"></div>
+          </div>
+        </header>
+
+        <!-- Controls -->
+        <section class="flex flex-col md:flex-row gap-4 items-center">
+          <input
+            id="locationInput"
+            type="text"
+            placeholder="Enter location (e.g. Liverpool, UK)"
+            class="flex-1 bg-slate-800/60 border border-white/10 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-sky-400/60 transition-all"
+          />
+          <button
+            id="getWeatherBtn"
+            class="bg-sky-500 hover:bg-sky-400 active:scale-[0.99] text-slate-900 font-semibold px-6 py-3 rounded-lg transition-all"
+          >
+            Get Weather & Predict Rain
+          </button>
+        </section>
+
+        <!-- Overview -->
+        <section id="overview" class="space-y-6">
+          <h2 class="text-2xl font-bold text-sky-400">Overview</h2>
+
+          <!-- AI Prediction Hero Card -->
+          <div class="bg-gradient-to-br from-sky-600/20 to-sky-400/10 border border-white/10 rounded-xl p-8 text-center animate-[fadeUp_0.6s_ease-out] card-hover">
+            <div class="flex items-center justify-center gap-2 mb-2">
+              <span class="text-2xl">🌧️</span>
+              <p class="text-sm uppercase tracking-wide text-sky-300">
+                AI Rain Prediction
+              </p>
+            </div>
+
+            <!-- Rain Prediction Percentage -->
+            <p
+              id="rainPrediction"
+              data-value="0"
+              class="text-6xl font-extrabold my-6
+              text-yellow-400
+              drop-shadow-lg
+              tracking-tight animate-glow"
+            >
+              --
+            </p>
+
+            <!-- Confidence Label -->
+            <p
+              id="confidenceLabel"
+              class="text-sm font-semibold tracking-wide uppercase
+              text-slate-300 transition-all duration-300"
+            >
+              --
+            </p>
+
+            <p class="text-base text-slate-300 mb-6">
+              Probability of rain tomorrow
+            </p>
+
+            <!-- Rain Probability Chart -->
+            <div class="max-w-md mx-auto bg-slate-900/40 border border-white/5 rounded-lg p-4">
+              <div class="h-24">
+                <canvas id="rainGauge"></canvas>
+              </div>
+            </div>
+          </div>
+
+          <!-- Weather Map -->
+          <div
+            class="bg-slate-900/60 border border-white/10 rounded-xl p-4
+                  animate-[fadeUp_0.6s_ease-out] card-hover"
+          >
+            <div class="flex items-center gap-2 mb-2">
+              <span class="text-xl">🗺️</span>
+              <p class="text-sm font-semibold text-slate-300">
+                Precipitation Map
+              </p>
+            </div>
+
+            <div
+              id="weatherMap"
+              class="h-72 w-full rounded-xl overflow-hidden bg-slate-900/60 border border-white/10"
+            ></div>
+          </div>
+
+          <!-- Weather Stats Grid -->
+          <div class="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="bg-slate-900/60 border border-white/10 rounded-lg p-4 card-hover">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg">🌡️</span>
+                <p class="text-xs text-slate-400">Temperature</p>
+              </div>
+              <p id="temperaturePrediction" class="skeleton w-20 h-5 text-lg font-semibold"></p>
+            </div>
+
+            <div class="bg-slate-900/60 border border-white/10 rounded-lg p-4 card-hover">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg">💧</span>
+                <p class="text-xs text-slate-400">Humidity</p>
+              </div>
+              <p id="humidityPrediction" class="skeleton w-20 h-5 text-lg font-semibold"></p>
+            </div>
+
+            <div class="bg-slate-900/60 border border-white/10 rounded-lg p-4 card-hover">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg">🔽</span>
+                <p class="text-xs text-slate-400">Pressure</p>
+              </div>
+              <p id="pressurePrediction" class="skeleton w-24 h-5 text-lg font-semibold"></p>
+            </div>
+
+            <div class="bg-slate-900/60 border border-white/10 rounded-lg p-4 card-hover">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg">💨</span>
+                <p class="text-xs text-slate-400">Wind Speed</p>
+              </div>
+              <p id="windSpeedPrediction" class="skeleton w-24 h-5 text-lg font-semibold"></p>
+            </div>
+
+            <div class="bg-slate-900/60 border border-white/10 rounded-lg p-4 card-hover">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg">☁️</span>
+                <p class="text-xs text-slate-400">Cloud Cover</p>
+              </div>
+              <p id="cloudCoverPrediction" class="skeleton w-20 h-5 text-lg font-semibold"></p>
+            </div>
+
+            <div class="bg-slate-900/60 border border-white/10 rounded-lg p-4 card-hover">
+              <div class="flex items-center gap-2 mb-1">
+                <span class="text-lg">🌤️</span>
+                <p class="text-xs text-slate-400">Condition</p>
+              </div>
+              <p id="weatherConditionPrediction" class="skeleton w-28 h-5 text-lg font-semibold capitalize"></p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Weather Insights -->
+        <section id="insights" class="space-y-6">
+          <h2 class="text-2xl font-bold text-sky-400">Insights</h2>
+
+          <!-- Radar Chart -->
+          <div class="bg-slate-900/60 border border-white/10 rounded-xl p-6 card-hover">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center gap-2">
+                <span class="text-xl">📡</span>
+                <p class="text-lg font-semibold">Current Conditions</p>
+              </div>
+              <p class="text-xs text-slate-400">Normalised (0–1)</p>
+            </div>
+            <div class="h-[450px] max-w-xl mx-auto flex justify-center">
+              <canvas id="featureChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Why & History Grid -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <!-- Why this Prediction? -->
+            <div class="bg-slate-900/60 border border-white/10 rounded-xl p-6 card-hover">
+              <div class="flex items-center gap-2 mb-4">
+                <span class="text-xl">🤔</span>
+                <h3 class="text-lg font-semibold">Why this Prediction?</h3>
+              </div>
+              <ul
+                id="predictionReasons"
+                class="list-disc list-inside space-y-2 text-sm text-slate-300"
+              >
+                <li class="skeleton w-64 h-4"></li>
+                <li class="skeleton w-48 h-4"></li>
+                <li class="skeleton w-56 h-4"></li>
+              </ul>
+            </div>
+
+            <!-- Prediction History -->
+            <div class="bg-slate-900/60 border border-white/10 rounded-xl p-6 card-hover">
+              <div class="flex items-center justify-between mb-4">
+                <div class="flex items-center gap-2">
+                  <span class="text-xl">📜</span>
+                  <h3 class="text-lg font-semibold">Recent Predictions</h3>
+                </div>
+                <button
+                  id="clearHistoryBtn"
+                  class="bg-red-500/90 hover:bg-red-500 text-white text-xs py-1.5 px-3 rounded-lg transition flex items-center gap-1"
+                >
+                  <span>🗑️</span>
+                  Clear
+                </button>
+              </div>
+
+              <p class="text-xs text-slate-500 mb-2">
+                Last updated: <span id="lastUpdatedTime">Never</span>
+              </p>
+
+              <p class="text-xs text-slate-400 mb-3">
+                📍 Click a location to restore prediction
+              </p>
+
+              <div class="max-h-64 overflow-y-auto">
+                <ul
+                  id="predictionHistory"
+                  class="space-y-2 text-sm text-slate-300"
+                >
+                  <li class="text-slate-500 italic">
+                    No previous predictions found.
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- About -->
+        <section id="about" class="space-y-6">
+
+          <!-- Section header -->
+          <div class="flex items-center gap-3">
+            <span class="text-2xl">🧠</span>
+            <h2 class="text-2xl font-bold text-sky-400 tracking-tight">
+              About This Project
+            </h2>
+          </div>
+
+          <!-- Main glass card -->
+          <div
+            class="bg-slate-900/60 backdrop-blur
+                   border border-white/10
+                   rounded-xl p-6 space-y-4
+                   transition card-hover animate-[fadeUp_0.6s_ease-out]"
+          >
+
+            <!-- What it is -->
+            <div class="flex items-start gap-3">
+              <span class="text-xl mt-1">🌦️</span>
+              <p class="text-slate-300 text-sm leading-relaxed">
+                The
+                <span class="font-semibold text-sky-300">
+                  Weather Intelligence System
+                </span>
+                is an interactive, AI-powered web application designed to explore how
+                modern web technologies, data visualisation, and machine learning can be
+                combined to support real-world decision making.
+              </p>
+            </div>
+
+            <!-- How it works -->
+            <div class="flex items-start gap-3">
+              <span class="text-xl mt-1">⚙️</span>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                The system retrieves real-time weather data and applies a
+                TensorFlow.js neural network trained on historical conditions to predict
+                the probability of rainfall for the following day. Interactive charts
+                and visual analytics are used to present both the prediction and the
+                contributing factors clearly.
+              </p>
+            </div>
+
+            <!-- Why it matters -->
+            <div class="flex items-start gap-3">
+              <span class="text-xl mt-1">🔍</span>
+              <p class="text-slate-400 text-sm leading-relaxed">
+                A strong emphasis is placed on
+                <span class="text-sky-300 font-medium">explainability</span> and
+                <span class="text-sky-300 font-medium">usability</span>, ensuring that
+                predictions are transparent and understandable to non-technical users,
+                rather than functioning as a "black box" model.
+              </p>
+            </div>
+          </div>
+
+          <!-- Signature / footer -->
+          <div
+            class="flex flex-col sm:flex-row sm:items-center sm:justify-between
+                   gap-3 pt-4 border-t border-white/10"
+          >
+            <p class="text-xs text-slate-500 italic flex items-center gap-2">
+              <span>👨‍💻</span>
+              Designed & built by
+              <span class="text-slate-300 font-medium">Harley Jackson</span>
+            </p>
+
+            <p class="text-xs text-slate-500 italic flex items-center gap-2">
+              <span>☕</span>
+              Built in the UK with curiosity, caffeine, and persistence
+            </p>
+          </div>
+        </section>
+
+        <!-- Loading -->
+        <div id="loading" class="hidden text-yellow-300 font-semibold animate-pulse">
+          Processing...
+        </div>
+
+      </div>
+    </main>
+
+  </div>
+
+  <!-- Scripts -->
+  <script src="model.js"></script>
+  <script src="weather-api.js"></script>
+  <script src="ui.js"></script>
+  <script src="app.js"></script>
+
+</body>
+</html>
