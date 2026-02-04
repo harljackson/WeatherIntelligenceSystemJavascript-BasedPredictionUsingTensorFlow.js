@@ -80,15 +80,6 @@ All processing runs **entirely in the browser** — no server-side setup require
 
 ---
 
-## ▶️ Demo
-
-📹 A full walkthrough and code explanation is included in:
-
-weather_intelligence_demo.mp4
-
-
----
-
 ## ⚠️ Disclaimer
 
 This system provides **probability-based predictions**, not guaranteed outcomes.  
@@ -99,7 +90,6 @@ It is intended for **educational and exploratory purposes** and should not be us
 ## 👨‍💻 Author
 
 **Harley Jackson**  
-BSc Computer Science  
 📍 United Kingdom
 
 ---
